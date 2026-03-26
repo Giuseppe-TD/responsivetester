@@ -1,0 +1,44 @@
+name: Build DevicePreviewer
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:   # permette di lanciarlo manualmente dal browser
+
+jobs:
+  build:
+    runs-on: macos-14   # macOS Sonoma con Xcode 15 preinstallato
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Installa XcodeGen
+        run: brew install xcodegen
+
+      - name: Genera .xcodeproj
+        run: xcodegen generate
+
+      - name: Build app
+        run: |
+          xcodebuild \
+            -project DevicePreviewer.xcodeproj \
+            -scheme DevicePreviewer \
+            -configuration Release \
+            -derivedDataPath build \
+            CODE_SIGN_IDENTITY="" \
+            CODE_SIGNING_REQUIRED=NO \
+            CODE_SIGNING_ALLOWED=NO \
+            ONLY_ACTIVE_ARCH=NO
+
+      - name: Zip .app
+        run: |
+          cd build/Build/Products/Release
+          zip -r DevicePreviewer.zip DevicePreviewer.app
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: DevicePreviewer
+          path: build/Build/Products/Release/DevicePreviewer.zip
+          retention-days: 30
