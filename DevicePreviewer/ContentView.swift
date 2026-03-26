@@ -166,19 +166,6 @@ struct ContentView: View {
         .padding(.vertical, 6)
         .frame(height: 42)
         .background(.bar)
-        .toolbar {
-            ToolbarItem(placement: .navigation) {
-                Button {
-                    withAnimation {
-                        sidebarVisibility = sidebarVisibility == .all ? .detailOnly : .all
-                    }
-                } label: {
-                    Image(systemName: "sidebar.left")
-                }
-                .help("Mostra/nascondi sidebar (⌘⇧L)")
-                .keyboardShortcut("l", modifiers: [.command, .shift])
-            }
-        }
     }
 
     // MARK: - URL Bar
