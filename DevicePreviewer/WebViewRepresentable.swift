@@ -82,14 +82,18 @@ struct WebViewRepresentable: NSViewRepresentable {
         func userContentController(_ userContentController: WKUserContentController,
                                    didReceive message: WKScriptMessage) {
             guard message.name == "scrollSync",
-                  appState.syncScrollEnabled,
                   let body = message.body as? [String: Double],
                   let x = body["x"], let y = body["y"]
             else { return }
+            // Segna questo device come ultimo attivo
+            appState.lastActiveDeviceId = device.id
+            guard appState.syncScrollEnabled else { return }
             appState.propagateScroll(x: x, y: y, excludingDevice: device.id)
         }
 
-        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
+        func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
+            appState.lastActiveDeviceId = device.id
+        }
 
         func webView(_ webView: WKWebView,
                      decidePolicyFor navigationAction: WKNavigationAction,

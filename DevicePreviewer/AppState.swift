@@ -68,6 +68,8 @@ class AppState: ObservableObject {
     private(set) var webViews: [UUID: WKWebView] = [:]
     private var reloadTimer: Timer?
     private var isSyncingScroll = false
+    // Ultimo device con cui l'utente ha interagito (per DevTools)
+    var lastActiveDeviceId: UUID? = nil
 
     // MARK: - Init
 
@@ -151,8 +153,12 @@ class AppState: ObservableObject {
 
     // MARK: - DevTools
 
-    func showInspectorForAllActive() {
-        activeDevices.compactMap { webViews[$0.id] }.forEach { showInspector(for: $0) }
+    func showInspectorForActive() {
+        // Apre solo il DevTools dell'ultimo device interagito,
+        // oppure il primo attivo disponibile
+        let targetId = lastActiveDeviceId ?? activeDevices.first?.id
+        guard let id = targetId, let wv = webViews[id] else { return }
+        showInspector(for: wv)
     }
 
     func showInspector(for webView: WKWebView) {

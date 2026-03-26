@@ -69,7 +69,7 @@ struct ContentView: View {
                 label: "DevTools",
                 help: "Apri Web Inspector · o right-click → Inspect Element"
             ) {
-                appState.showInspectorForAllActive()
+                appState.showInspectorForActive()
             }
 
             toolbarDivider
