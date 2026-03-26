@@ -107,12 +107,13 @@ class AppState: ObservableObject {
         scale              = CGFloat(max(0.15, min(1.0, load("sl_scale",   default: 0.42) as Double)))
         deviceSpacing      = CGFloat(max(8.0,  min(80.0, load("sl_spacing", default: 32.0) as Double)))
 
-        // Custom devices (prima, così allDevices è completo per il restore)
-        customDevices      = load("sl_customDevices", default: [DeviceModel]())
+        // Custom devices (prima, così abbiamo la lista completa per il restore)
+        let loadedCustomDevices: [DeviceModel] = load("sl_customDevices", default: [DeviceModel]())
+        customDevices = loadedCustomDevices
 
         // Active devices — ricostruisce UUID dai nomi salvati
         let savedNames: [String] = load("sl_activeNames", default: [String]())
-        let allDevs = DeviceModel.catalog + customDevices
+        let allDevs = DeviceModel.catalog + loadedCustomDevices
         if savedNames.isEmpty {
             activeDeviceIds = Set(DeviceModel.catalog.prefix(3).map(\.id))
         } else {
