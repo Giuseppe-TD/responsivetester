@@ -12,20 +12,18 @@ struct PhoneFrameOverlay: View {
         }
     }
 
-    // Dynamic Island: iPhone 14 Pro+ (h >= 852, w >= 393)
-    // iPhone 17 Air è 390x844 → notch, non DI
+    // Dynamic Island: iPhone 14 Pro+ e tutta la lineup 17
+    // iPhone 17 Air (390x844) ha DI nonostante h=844
     private var hasDynamicIsland: Bool {
-        device.category == .iPhone
-            && device.width >= 393
-            && device.height >= 852
+        guard device.category == .iPhone else { return false }
+        if device.name.contains("17") { return true }
+        return device.width >= 393 && device.height >= 852
     }
 
-    // Notch: iPhone X → 13 range (812–844 altezza)
+    // Notch: iPhone X → 13 (812–844), solo se non ha DI
     private var hasNotch: Bool {
-        device.category == .iPhone
-            && device.height >= 812
-            && device.height <= 844
-            && !hasDynamicIsland
+        guard device.category == .iPhone, !hasDynamicIsland else { return false }
+        return device.height >= 812 && device.height <= 844
     }
 
     // Pill speaker: iPhone SE / più vecchi (no notch, no DI)
