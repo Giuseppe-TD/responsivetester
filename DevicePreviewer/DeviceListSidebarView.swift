@@ -72,10 +72,10 @@ struct DeviceListSidebarView: View {
                 HStack(spacing: 5) {
                     Image(systemName: "plus.circle.fill")
                         .font(.caption)
-                        .foregroundStyle(.accentColor)
+                        .foregroundColor(.accentColor)
                     Text("Aggiungi dispositivo")
                         .font(.caption)
-                        .foregroundStyle(.accentColor)
+                        .foregroundColor(.accentColor)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 12)
