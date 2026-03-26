@@ -16,7 +16,7 @@ jobs:
       - name: Installa dipendenze
         run: |
           brew install xcodegen
-          pip3 install pillow
+          pip3 install pillow --break-system-packages
 
       - name: Genera AppIcon
         run: python3 generate_icon.py
