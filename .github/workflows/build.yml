@@ -1,20 +1,25 @@
-name: Build DevicePreviewer
+name: Build Screenlab
 
 on:
   push:
     branches: [ main ]
-  workflow_dispatch:   # permette di lanciarlo manualmente dal browser
+  workflow_dispatch:
 
 jobs:
   build:
-    runs-on: macos-15   # macOS Sonoma con Xcode 15 preinstallato
+    runs-on: macos-15
 
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Installa XcodeGen
-        run: brew install xcodegen
+      - name: Installa dipendenze
+        run: |
+          brew install xcodegen
+          pip3 install pillow
+
+      - name: Genera AppIcon
+        run: python3 generate_icon.py
 
       - name: Genera .xcodeproj
         run: xcodegen generate
@@ -22,23 +27,22 @@ jobs:
       - name: Build app
         run: |
           xcodebuild \
-            -project DevicePreviewer.xcodeproj \
-            -scheme DevicePreviewer \
+            -project Screenlab.xcodeproj \
+            -scheme Screenlab \
             -configuration Release \
             -derivedDataPath build \
             CODE_SIGN_IDENTITY="" \
             CODE_SIGNING_REQUIRED=NO \
-            CODE_SIGNING_ALLOWED=NO \
-            ONLY_ACTIVE_ARCH=NO
+            CODE_SIGNING_ALLOWED=NO
 
       - name: Zip .app
         run: |
           cd build/Build/Products/Release
-          zip -r DevicePreviewer.zip DevicePreviewer.app
+          zip -r Screenlab.zip Screenlab.app
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: DevicePreviewer
-          path: build/Build/Products/Release/DevicePreviewer.zip
+          name: Screenlab
+          path: build/Build/Products/Release/Screenlab.zip
           retention-days: 30
