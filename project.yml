@@ -1,0 +1,27 @@
+name: DevicePreviewer
+
+options:
+  deploymentTarget:
+    macOS: "13.0"
+  defaultConfig: Debug
+  xcodeVersion: "15"
+
+settings:
+  SWIFT_VERSION: "5.9"
+  MACOSX_DEPLOYMENT_TARGET: "13.0"
+
+targets:
+  DevicePreviewer:
+    type: application
+    platform: macOS
+    sources:
+      - path: DevicePreviewer
+        excludes:
+          - "*.entitlements"
+    settings:
+      PRODUCT_BUNDLE_IDENTIFIER: it.tastieredigitali.DevicePreviewer
+      INFOPLIST_FILE: DevicePreviewer/Info.plist
+      CODE_SIGN_ENTITLEMENTS: DevicePreviewer/DevicePreviewer.entitlements
+      COMBINE_HIDPI_IMAGES: YES
+    dependencies:
+      - sdk: WebKit.framework
