@@ -90,7 +90,7 @@ struct DeviceCardView: View {
             y: isHovered ? 10 : 5
         )
         .scaleEffect(scale, anchor: .top)
-        .frame(width: device.width * scale, height: device.height * scale)
+        .frame(width: device.width * scale, height: device.height * scale, alignment: .top)
         .onHover { isHovered = $0 }
         .animation(.easeOut(duration: 0.14), value: isHovered)
     }
