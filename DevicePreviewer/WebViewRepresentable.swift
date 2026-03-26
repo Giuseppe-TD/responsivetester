@@ -5,8 +5,6 @@ struct WebViewRepresentable: NSViewRepresentable {
     let device: DeviceModel
     @EnvironmentObject var appState: AppState
 
-    // MARK: - Lifecycle
-
     func makeCoordinator() -> Coordinator {
         Coordinator(device: device, appState: appState)
     }
@@ -21,7 +19,6 @@ struct WebViewRepresentable: NSViewRepresentable {
     }
 
     func updateNSView(_ nsView: WKWebView, context: Context) {
-        // User agent cambiato (solo su dispositivi custom modificati)
         if nsView.customUserAgent != device.userAgent {
             nsView.customUserAgent = device.userAgent
             nsView.reload()
@@ -30,11 +27,8 @@ struct WebViewRepresentable: NSViewRepresentable {
 
     static func dismantleNSView(_ nsView: WKWebView, coordinator: Coordinator) {
         coordinator.appState.unregisterWebView(for: coordinator.device.id)
-        // Rimuovi message handler per evitare retain cycle
         nsView.configuration.userContentController.removeScriptMessageHandler(forName: "scrollSync")
     }
-
-    // MARK: - Coordinator
 
     class Coordinator: NSObject, WKScriptMessageHandler, WKNavigationDelegate {
         let device: DeviceModel
@@ -49,7 +43,8 @@ struct WebViewRepresentable: NSViewRepresentable {
             let config = WKWebViewConfiguration()
             let ucc    = WKUserContentController()
 
-            // Script scroll tracking iniettato su ogni pagina
+            config.preferences.setValue(true, forKey: "developerExtrasEnabled")
+
             let scrollJS = """
             (function(){
                 var ticking = false;
@@ -71,25 +66,19 @@ struct WebViewRepresentable: NSViewRepresentable {
                 }, { passive: true, capture: true });
             })();
             """
-            let script = WKUserScript(source: scrollJS,
-                                      injectionTime: .atDocumentEnd,
-                                      forMainFrameOnly: true)
+            let script = WKUserScript(source: scrollJS, injectionTime: .atDocumentEnd, forMainFrameOnly: true)
             ucc.addUserScript(script)
             ucc.add(self, name: "scrollSync")
             config.userContentController = ucc
-
-            // Permetti navigazione a qualunque URL (incluso http://)
             config.preferences.setValue(true, forKey: "allowFileAccessFromFileURLs")
 
             let wv = WKWebView(frame: .zero, configuration: config)
             wv.customUserAgent = device.userAgent
             wv.navigationDelegate = self
             wv.allowsBackForwardNavigationGestures = true
-
             return wv
         }
 
-        // Scroll ricevuto da JS → propaga agli altri
         func userContentController(_ userContentController: WKUserContentController,
                                    didReceive message: WKScriptMessage) {
             guard message.name == "scrollSync",
@@ -100,7 +89,6 @@ struct WebViewRepresentable: NSViewRepresentable {
             appState.propagateScroll(x: x, y: y, excludingDevice: device.id)
         }
 
-        // Navigation delegate
         func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {}
 
         func webView(_ webView: WKWebView,
