@@ -7,7 +7,7 @@ on:
 
 jobs:
   build:
-    runs-on: macos-14   # macOS Sonoma con Xcode 15 preinstallato
+    runs-on: macos-15   # macOS Sonoma con Xcode 15 preinstallato
 
     steps:
       - name: Checkout
