@@ -76,45 +76,39 @@ class AppState: ObservableObject {
     init() {
         let ud = UserDefaults.standard
 
+        // Helper per leggere valori salvati con JSONEncoder
+        func load<T: Codable>(_ key: String, default def: T) -> T {
+            guard let data = ud.data(forKey: key),
+                  let val  = try? JSONDecoder().decode(T.self, from: data)
+            else { return def }
+            return val
+        }
+
         // URL
-        urlString = ud.string(forKey: "sl_url") ?? "https://www.google.com"
+        urlString          = load("sl_url",         default: "https://www.google.com")
 
         // View mode
-        let modeRaw = ud.string(forKey: "sl_viewMode") ?? ViewMode.multi.rawValue
-        viewMode = ViewMode(rawValue: modeRaw) ?? .multi
+        let modeRaw        = load("sl_viewMode",    default: ViewMode.multi.rawValue)
+        viewMode           = ViewMode(rawValue: modeRaw) ?? .multi
 
         // Settings
-        syncScrollEnabled  = ud.object(forKey: "sl_syncScroll")   == nil ? true  : ud.bool(forKey: "sl_syncScroll")
-        liveReloadEnabled  = ud.bool(forKey: "sl_liveReload")
-        liveReloadInterval = ud.object(forKey: "sl_liveInterval") == nil ? 3.0   : ud.double(forKey: "sl_liveInterval")
-        let savedScale     = ud.object(forKey: "sl_scale")        == nil ? 0.42  : ud.double(forKey: "sl_scale")
-        scale              = CGFloat(savedScale)
-        let savedSpacing   = ud.object(forKey: "sl_spacing")      == nil ? 32.0  : ud.double(forKey: "sl_spacing")
-        deviceSpacing      = CGFloat(savedSpacing)
+        syncScrollEnabled  = load("sl_syncScroll",  default: true)
+        liveReloadEnabled  = load("sl_liveReload",  default: false)
+        liveReloadInterval = load("sl_liveInterval",default: 3.0)
+        scale              = CGFloat(max(0.15, min(1.0, load("sl_scale",   default: 0.42) as Double)))
+        deviceSpacing      = CGFloat(max(8.0,  min(80.0, load("sl_spacing", default: 32.0) as Double)))
 
         // Custom devices
-        if let data = ud.data(forKey: "sl_customDevices"),
-           let devs = try? JSONDecoder().decode([DeviceModel].self, from: data) {
-            customDevices = devs
-        } else {
-            customDevices = []
-        }
+        customDevices      = load("sl_customDevices", default: [DeviceModel]())
 
-        // Active IDs (default: primi 3)
-        if let data = ud.data(forKey: "sl_activeIds"),
-           let ids  = try? JSONDecoder().decode([UUID].self, from: data) {
-            activeDeviceIds = Set(ids)
-        } else {
-            activeDeviceIds = Set(DeviceModel.catalog.prefix(3).map(\.id))
-        }
+        // Active IDs (default: primi 3 del catalogo)
+        let savedIds: [UUID] = load("sl_activeIds", default: [UUID]())
+        activeDeviceIds = savedIds.isEmpty
+            ? Set(DeviceModel.catalog.prefix(3).map(\.id))
+            : Set(savedIds)
 
         // Single ID
-        if let data = ud.data(forKey: "sl_singleId"),
-           let sid  = try? JSONDecoder().decode(UUID?.self, from: data) {
-            singleDeviceId = sid
-        } else {
-            singleDeviceId = DeviceModel.catalog.first?.id
-        }
+        singleDeviceId     = load("sl_singleId",    default: DeviceModel.catalog.first?.id)
     }
 
     // MARK: - Computed
