@@ -29,12 +29,21 @@ class AppState: ObservableObject {
 
     // ── Dispositivi attivi ───────────────────────────────────────────
     @Published var activeDeviceIds: Set<UUID> {
-        didSet { save("sl_activeIds", Array(activeDeviceIds)) }
+        didSet {
+            // Salva i NOMI (stabili) non gli UUID (rigenerati ad ogni avvio)
+            let names = allDevices
+                .filter { activeDeviceIds.contains($0.id) }
+                .map(\.name)
+            save("sl_activeNames", names)
+        }
     }
 
     // ── Single device selezionato ────────────────────────────────────
     @Published var singleDeviceId: UUID? {
-        didSet { save("sl_singleId", singleDeviceId) }
+        didSet {
+            let name = allDevices.first { $0.id == singleDeviceId }?.name
+            save("sl_singleName", name ?? "")
+        }
     }
 
     // ── View mode ────────────────────────────────────────────────────
@@ -98,17 +107,29 @@ class AppState: ObservableObject {
         scale              = CGFloat(max(0.15, min(1.0, load("sl_scale",   default: 0.42) as Double)))
         deviceSpacing      = CGFloat(max(8.0,  min(80.0, load("sl_spacing", default: 32.0) as Double)))
 
-        // Custom devices
+        // Custom devices (prima, così allDevices è completo per il restore)
         customDevices      = load("sl_customDevices", default: [DeviceModel]())
 
-        // Active IDs (default: primi 3 del catalogo)
-        let savedIds: [UUID] = load("sl_activeIds", default: [UUID]())
-        activeDeviceIds = savedIds.isEmpty
-            ? Set(DeviceModel.catalog.prefix(3).map(\.id))
-            : Set(savedIds)
+        // Active devices — ricostruisce UUID dai nomi salvati
+        let savedNames: [String] = load("sl_activeNames", default: [String]())
+        let allDevs = DeviceModel.catalog + customDevices
+        if savedNames.isEmpty {
+            activeDeviceIds = Set(DeviceModel.catalog.prefix(3).map(\.id))
+        } else {
+            let matched = allDevs.filter { savedNames.contains($0.name) }.map(\.id)
+            activeDeviceIds = matched.isEmpty
+                ? Set(DeviceModel.catalog.prefix(3).map(\.id))
+                : Set(matched)
+        }
 
-        // Single ID
-        singleDeviceId     = load("sl_singleId",    default: DeviceModel.catalog.first?.id)
+        // Single device — ricostruisce UUID dal nome salvato
+        let savedSingleName: String = load("sl_singleName", default: "")
+        if savedSingleName.isEmpty {
+            singleDeviceId = DeviceModel.catalog.first?.id
+        } else {
+            singleDeviceId = allDevs.first { $0.name == savedSingleName }?.id
+                ?? DeviceModel.catalog.first?.id
+        }
     }
 
     // MARK: - Computed
